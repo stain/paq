@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.example.provaq</groupId>
-    <artifactId>provaq-rest</artifactId>
+    <groupId>com.example.paq</groupId>
+    <artifactId>paq</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>war</packaging>
-    <name>Simple CXF JAX-RS webapp service using spring configuration</name>
-    <description>Simple CXF JAX-RS webapp service using spring configuration</description>
+    <name>Example PROV-AQ usage</name>
+    <description>A simple rest service exposes its own provenance, linked using PROV-AQ</description>
     <properties>
         <jackson.version>1.8.6</jackson.version>
     </properties>

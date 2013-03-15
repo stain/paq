@@ -1,0 +1,9 @@
+document
+ prefix greet <http://localhost:8080/paq/hello/greet/>
+ prefix app <http://localhost:8080/paq/hello/>
+ entity(greet:Alice)
+ wasDerivedFrom(greet:Alice, name)
+ entity(name, [ prov:value="Alice" ])
+ agent(app:hello, [ prov:type='prov:SoftwareAgent' ])
+ wasAttributedTo(greet:Alice, app:hello)
+endDocument
