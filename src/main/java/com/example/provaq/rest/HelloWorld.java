@@ -48,7 +48,8 @@ public class HelloWorld {
     	URI greetPrefix = greetURI.resolve("./");
 		prov.append(String.format(" prefix greet <%s>\n", greetPrefix));
 		prov.append(String.format(" prefix app <%s>\n", appURI));
-
+		prov.append("\n");
+		
     	// Note, we could have used just entity(name:) and have
     	// the complete URI in a name: prefix, but this gives nicer
     	// rendering in provconvert
@@ -56,15 +57,16 @@ public class HelloWorld {
     	
     	prov.append(String.format(" entity(%s)\n", greetEntity));
     	prov.append(String.format(" wasDerivedFrom(%s, name)\n", greetEntity));
+    	prov.append("\n");
     	
-    	prov.append(String.format(" entity(name, [ prov:value=\"%s\" ])\n", name));
+    	prov.append(String.format(" entity(name, [ prov:value=\"%s\" ])\n", name));    	
+    	prov.append(String.format(" wasAttributedTo(%s, app:hello)\n", greetEntity));
+    	prov.append("\n");
     	
     	prov.append(" agent(app:hello, [ prov:type='prov:SoftwareAgent' ])\n");
-
-    	prov.append(String.format(" wasAttributedTo(%s, app:hello)\n", greetEntity));
-    	prov.append("endDocument\n");
-    	return prov.toString();
     	
+    	prov.append("endDocument\n");
+    	return prov.toString();    	
     }
 }
 
