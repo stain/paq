@@ -104,7 +104,6 @@ the absolute URIs](http://cxf.apache.org/docs/jax-rs-basics.html#JAX-RSBasics-UR
     	prov.append(String.format(" wasAttributedTo(%s, app:hello)\n", greetEntity));
     	prov.append("endDocument\n");
     	return prov.toString();
-    	
     }
 
 So in order to provide the RESTful links we will need to insert *Link:*
