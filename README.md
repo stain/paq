@@ -92,7 +92,6 @@ quite simple thanks to [JAX-RS and CXF](http://cxf.apache.org/docs/jax-rs-basics
 Our provenance method is a bit more complicated as it [generates 
 the absolute URIs](http://cxf.apache.org/docs/jax-rs-basics.html#JAX-RSBasics-URIcalculationusingUriInfoandUriBuilder) for the greeting resource (depending on the name parameter) and then build the PROV-N trace - here using a simple [MessageFormat](http://docs.oracle.com/javase/7/docs/api/java/text/MessageFormat.html) template.
 
-
     @GET
     @Path("provenance/hello/{name}")
     @Produces("text/provenance-notation")
@@ -171,4 +170,12 @@ The final version of hello() should then look something like:
         return responseBuilder.header(HttpHeaders.LINK, provLink).build();
     }
     
-You may check out the <code>paq</code> branch to     
+You may check out the <code>paq</code> branch from https://github.com/stain/paq to see the final version.
+
+
+Finding the provenance links
+----------------------------
+If you have not followed the tutorial above, make sure you *check out* and *build* 
+the <code>paq</code> branch from https://github.com/stain/paq to include the PROV-AQ Link headers.
+
+
