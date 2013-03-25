@@ -176,6 +176,48 @@ You may check out the <code>paq</code> branch from https://github.com/stain/paq 
 Finding the provenance links
 ----------------------------
 If you have not followed the tutorial above, make sure you *check out* and *build* 
-the <code>paq</code> branch from https://github.com/stain/paq to include the PROV-AQ Link headers.
+the <code>paq</code> branch from https://github.com/stain/paq to include the PROV-AQ Link headers:
+
+    PS C:\users\stain\src\paq> git checkout paq
+    Switched to branch 'paq'
+    
+    PS C:\users\stain\src\paq> mvn clean jetty:run
+    [INFO] Scanning for projects...
+    ..
+    [INFO] Restart completed at Mon Mar 25 16:55:41 GMT 2013
+
+Now retrieving the hello world resource with <code>-i</code> should show us the new <code>Link:</code> header:
 
 
+    PS C:\Users\stain\src\paq> curl -i http://localhost:8080/paq/hello/Alice
+    HTTP/1.1 200 OK
+    Content-Type: text/plain
+    Date: Mon, 25 Mar 2013 16:57:01 GMT
+    Link: <http://localhost:8080/paq/provenance/hello/Alice>;rel=http://www.w3.org/ns/prov#has_provenance
+    Content-Length: 13
+    Server: Jetty(6.1.26)
+    
+    Hello, Alice
+
+and just to verify we did get our absolute URIs right above, we follow the link:
+
+    PS C:\Users\stain\src\paq> curl http://localhost:8080/paq/provenance/hello/Alice
+    document
+      prefix hello <http://localhost:8080/paq/hello/>
+      prefix app <http://localhost:8080/paq/>
+      entity(hello:Alice)
+      wasDerivedFrom(hello:Alice, name)
+      entity(name, [ prov:value="Alice" ])
+      agent(app:hello, [ prov:type=prov:SoftwareAgent ])
+      wasAttributedTo(hello:Alice, app:hello)
+    endDocument
+    
+Let's try to do some hackish shell script to fetch this URL (this requires Linux/OSX or Cygwin installed):
+
+    PS C:\Users\stain\src\paq> curl $(curl -s -I http://localhost:8080/paq/hello/Alice | grep ^Link:.*has_provenance  | sed 's/.*<//' | sed 's/>.*//') > provenance.provn
+    
+Note, the above will not work if the Link header spans multiple lines, which would be legal according to HTTP 1.1 and RFC 5988.)
+
+If we now have a [ProvToolbox](https://github.com/lucmoreau/ProvToolbox) installed, we can generate a diagram:
+
+TODO: Make diagram   .. See examples/alice.png
