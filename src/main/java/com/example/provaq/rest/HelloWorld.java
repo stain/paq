@@ -1,72 +1,67 @@
 package com.example.provaq.rest;
+import java.io.IOException;
 import java.net.URI;
+import java.text.MessageFormat;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Link;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
-@Path("/hello")
+import org.apache.commons.io.IOUtils;
+
+@Path("/")
 public class HelloWorld {
 
-    @GET
-    @Path("/greet/{name}")
+    private static final String HAS_PROVENANCE = "http://www.w3.org/ns/prov#has_provenance";
+
+	@GET
+    @Path("hello/{name}")
     @Produces("text/plain")
-    public String greet(@PathParam("name") String name) {
-        return "Hello, " + name + "\n";
+    public Response hello(@PathParam("name") String name, @Context UriInfo ui) {
+        String greeting = "Hello, " + name + "\n";
+    	ResponseBuilder responseBuilder = Response.ok().entity(greeting);
+    	// TODO: Could have used Link.fromResourceMethod but it seems to return wrong URI in CXF :(
+    	URI provUri = ui.getBaseUriBuilder().path(getClass(), "helloProvenance").build(name);
+    	Link provLink = Link.fromUri(provUri).rel(HAS_PROVENANCE).build();
+		return responseBuilder.header(HttpHeaders.LINK, provLink).build();
     }
-
+	
     @GET
+    @Path("provenance/hello/{name}")
     @Produces("text/provenance-notation")
-    @Path("/provenance/greet/{name}")
-    public String greetProvenance(@PathParam("name") String name,
-    		@Context UriInfo ui) {
-    	
+    public String helloProvenance(@PathParam("name") String name,
+    		@Context UriInfo ui) throws IOException {
     	// Get our absolute URI
-    	// See http://cxf.apache.org/docs/jax-rs-basics.html#JAX-RSBasics-URIcalculationusingUriInfoandUriBuilder
-    	UriBuilder appUri = ui.getBaseUriBuilder().path(getClass());
-		UriBuilder greetUri = appUri.path(getClass(), "greet");
-    	
+    	// See http://cxf.apache.org/docs/jax-rs-basics.html#JAX-RSBasics-URIcalculationusingUriInfoandUriBuilder    	
+    	UriBuilder appUri = ui.getBaseUriBuilder();
     	// Absolute URIs for resources we are to give provenance about
-    	URI greetURI = greetUri.build(name);
-    	URI appURI = appUri.build("").resolve("../");
+    	URI helloURI = appUri.path(getClass(), "hello").build(name);    	
     	
-    	// Simple PROV-N trace <http://www.w3.org/TR/prov-n/>
-    	// 
-    	// The resource .../hello/greet/fred is derived from an name entity with prov:value "fred"
-    	// and was attributed to the .../hello service
+    	// Prepare prefixes for PROV-N qualified names
+    	URI appURI = appUri.build("").resolve("../");    	
+    	URI helloPrefix = helloURI.resolve("./");
     	
+    	// The PROV-N qualified name for our /hello/{name} resource
+    	String helloEntity = "hello:" + helloPrefix.relativize(helloURI);
     	
-    	// Note: PROV-N should probably better be built using the PROV Toolbox rather than 
-    	// this naive approach!
-    	StringBuilder prov = new StringBuilder();
-    	prov.append("document\n");
-
-    	URI greetPrefix = greetURI.resolve("./");
-		prov.append(String.format(" prefix greet <%s>\n", greetPrefix));
-		prov.append(String.format(" prefix app <%s>\n", appURI));
-		prov.append("\n");
-		
-    	// Note, we could have used just entity(name:) and have
-    	// the complete URI in a name: prefix, but this gives nicer
-    	// rendering in provconvert
-    	String greetEntity = "greet:" + greetPrefix.relativize(greetURI); 
-    	
-    	prov.append(String.format(" entity(%s)\n", greetEntity));
-    	prov.append(String.format(" wasDerivedFrom(%s, name)\n", greetEntity));
-    	prov.append("\n");
-    	
-    	prov.append(String.format(" entity(name, [ prov:value=\"%s\" ])\n", name));    	
-    	prov.append(String.format(" wasAttributedTo(%s, app:hello)\n", greetEntity));
-    	prov.append("\n");
-    	
-    	prov.append(" agent(app:hello, [ prov:type='prov:SoftwareAgent' ])\n");
-    	
-    	prov.append("endDocument\n");
-    	return prov.toString();    	
+    	// Simple PROV-N trace, see <http://www.w3.org/TR/prov-n/>
+    	// Here this is done in a naive way by loading a template 
+    	// from src/main/resources and do string-replace to insert
+    	// our URIs.
+    	String template = IOUtils.toString(getClass().getResourceAsStream("/provTemplate.txt"));
+    	String prov = MessageFormat.format(template, 
+    			helloPrefix, appURI, helloEntity, name);
+    	// Note: PROV-N should be be built using say the PROV Toolbox 
+    	// rather than this naive template approach!
+    	return prov;
     }
 }
 
