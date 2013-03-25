@@ -1,0 +1,9 @@
+document
+  prefix hello <{0}>
+  prefix app <{1}>
+  entity({2})
+  wasDerivedFrom({2}, name)
+  entity(name, [ prov:value="{3}" ])
+  agent(app:hello, [ prov:type='prov:SoftwareAgent' ])
+  wasAttributedTo({2}, app:hello)
+endDocument
