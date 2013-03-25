@@ -8,6 +8,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Link;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
@@ -16,12 +20,20 @@ import org.apache.commons.io.IOUtils;
 @Path("/")
 public class HelloWorld {
 
+    private static final String HAS_PROVENANCE = "http://www.w3.org/ns/prov#has_provenance";
+
 	@GET
     @Path("hello/{name}")
     @Produces("text/plain")
-    public String hello(@PathParam("name") String name) {
-        String greeting = "Hello, " + name + "\n";
-        return greeting;
+    public Response hello(@PathParam("name") String name, @Context UriInfo ui) {
+    	// TODO: Could have used Link.fromResourceMethod instead, 
+		// but it seems to return wrong URI in current CXF
+    	URI provUri = ui.getBaseUriBuilder().path(getClass(), "helloProvenance").build(name);
+    	Link provLink = Link.fromUri(provUri).rel(HAS_PROVENANCE).build();
+
+    	String greeting = "Hello, " + name + "\n";
+    	ResponseBuilder responseBuilder = Response.ok().entity(greeting);
+		return responseBuilder.header(HttpHeaders.LINK, provLink).build();
     }
 	
     @GET
