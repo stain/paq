@@ -1,112 +1,129 @@
 Providing provenance for a RESTful service
 ==========================================
 
-This is an example of how a a RESTful service, implemented using [JAX-RS and CXF](http://cxf.apache.org/docs/jax-rs-basics.html), can expose [provenance](http://www.w3.org/TR/prov-overview/) of the resources it exposes. This code is based on the [cxf-jaxrs-service](http://cxf.apache.org/docs/jax-rs-maven-plugins.html#JAX-RSMavenPlugins-Archetypes).
+This is an example of how a a RESTful service, implemented using [JAX-RS and CXF](http://cxf.apache.org/docs/jax-rs-basics.html), can expose [provenance](http://www.w3.org/TR/prov-overview/) of the resources it exposes. 
 
 There are two branches in this project on https://github.com/stain/paq:
-* *master* - REST service that can greet and return provenance of greeting
-* *paq* - REST service that also provides link between greet and its provenance (TODO)
-
+* *master* - REST service that can say hello, and return provenance of greeting
+* *paq* - REST service that also provides link between greeting and its provenance
 
 To compile/run, you will need Java and [Maven](http://maven.apache.org/download.cgi):
 
-    stain@ralph-ubuntu:~/src/paq$ mvn clean install tomcat:run-war-only
+    PS C:\users\stain\src\paq> mvn clean jetty:run
     [INFO] Scanning for projects...
-    [INFO]                                                                         
+    [INFO]
     [INFO] ------------------------------------------------------------------------
-    [INFO] Building Example PROV-AQ usage 0.0.1-SNAPSHOT
+    [INFO] Building Example PROV-AQ usage 0.1-SNAPSHOT
     [INFO] ------------------------------------------------------------------------
-    (..)
-    Mar 15, 2013 3:59:33 PM org.apache.coyote.http11.Http11Protocol start
-    INFO: Starting Coyote HTTP/1.1 on http-8080
-    
-Check the HelloWorld REST service is working (in a different shell):
+    (..)    
+    2013-03-25 15:39:09.419:INFO::Started SelectChannelConnector@0.0.0.0:8080
+    [INFO] Started Jetty Server
+    [INFO] Starting scanner at interval of 10 seconds.
 
-    stain@ralph-ubuntu:~/src/paq$ curl http://localhost:8080/paq/hello/greet/Alice
+The base URI should be http://localhost:8080/paq/ unless you modified the port with <code>mvn -Djetty.port=9999</code>
+    
+Check the HelloWorld REST service is working using your favourite HTTP client (e.g. browser or curl in a new terminal window). 
+
+    PS C:\Users\stain\src\paq> curl http://localhost:8080/paq/hello/Alice
     Hello, Alice
 
 You may replace *Alice* with any name, as long as it is URI escaped:
 
-    stain@ralph-ubuntu:~/src/paq$ curl http://localhost:8080/paq/hello/greet/Joe%20Bloggs
+    PS C:\Users\stain\src\paq> curl http://localhost:8080/paq/hello/Joe%20Bloggs
     Hello, Joe Bloggs
 
+Provenance resource
+-------------------
 
-This example service provides [provenance](http://www.w3.org/TR/prov-overview/), using the [PROV-N](http://www.w3.org/TR/prov-n/) format for readability:
+This example service provide [provenance](http://www.w3.org/TR/prov-overview/),
+using the [PROV-N](http://www.w3.org/TR/prov-n/) format:
 
-    stain@ralph-ubuntu:~/src/paq$ curl -i http://localhost:8080/paq/hello/provenance/greet/Alice 
+    PS C:\Users\stain\src\paq> curl -i http://localhost:8080/paq/provenance/hello/Alice
     HTTP/1.1 200 OK
-    Server: Apache-Coyote/1.1
-    Date: Fri, 15 Mar 2013 16:06:38 GMT
     Content-Type: text/provenance-notation
-    Content-Length: 312
-
+    Date: Mon, 25 Mar 2013 15:41:02 GMT
+    Content-Length: 305
+    Server: Jetty(6.1.26)
+    
     document
-     prefix greet <http://localhost:8080/paq/hello/greet/>
-     prefix app <http://localhost:8080/paq/hello/>
-     entity(greet:Alice)
-     wasDerivedFrom(greet:Alice, name)
-     entity(name, [ prov:value="Alice" ])
-     agent(app:hello, [ prov:type='prov:SoftwareAgent' ])
-     wasAttributedTo(greet:Alice, app:hello)
+      prefix hello <http://localhost:8080/paq/hello/>
+      prefix app <http://localhost:8080/paq/>
+      entity(hello:Alice)
+      wasDerivedFrom(hello:Alice, name)
+      entity(name, [ prov:value="Alice" ])
+      agent(app:hello, [ prov:type=prov:SoftwareAgent ])
+      wasAttributedTo(hello:Alice, app:hello)
     endDocument
+    
 
-Note that we used the {{-i}} parameter above to verify that the correct media-type [text/provenance-notation](http://www.iana.org/assignments/media-types/text/provenance-notation) was returned.
+Note that we used the <code>-i</code> parameter above to verify that the correct media-type [text/provenance-notation](http://www.iana.org/assignments/media-types/text/provenance-notation) was returned.
 
-The question arises, how can someone accessing the greeting service at http://localhost:8080/paq/hello/greet/Alice (greet:Alice) know that they can find the provenance at http://localhost:8080/paq/hello/provenance/greet/Alice? This is where the [PROV-AQ](http://www.w3.org/TR/prov-aq/) note comes handy.
+This provenance says that the resource <http://localhost:8080/paq/hello/Alice> was derived from a name with value "Alice", and made by the (web) service <http://localhost:8080/paq/hello>. 
 
-It says that a [resource accessed by HTTP](http://www.w3.org/TR/2013/WD-prov-aq-20130312/#resource-accessed-by-http) can 
-be accessed by adding a {{Link}} header with the relation "http://www.w3.org/ns/prov#has_provenance". So in our case, this can be achived with:
+This PROV-N trace is generated by <code>HelloWorld.helloProvenance()</code> by filling in the URIs and name in the template src/main/resources/provTemplate.txt - a more detailed provenance trace might include things like timestamps and details about who provided the name.   
 
-    Link: <http://localhost:8080/paq/hello/provenance/greet/Alice>; rel="http://www.w3.org/ns/prov#has_provenance"
 
-We do not need to provide the anchor, as the *target-URI* for
-greet:Alice is its own URI - that is, you can find the same URI you
-accessed within the PROV-N document. 
+Locating provenance
+-------------------
 
-If on the other hand our web service used different 
-resources for different representations, like 
-<http://localhost:8080/paq/hello/greet/Alice.html>, then 
-we might want to keep <http://localhost:8080/paq/hello/greet/Alice>
-as the entity URI in the PROV trace, at least as long as its provenance
-would be the same. This we can indicate by adding the *anchor*
-attribute in the Link headers returned for Alice.html:
+A restful client who has requested <http://localhost:8080/paq/hello/Alice> will not magically know that there is a provenance trace at <http://localhost:8080/paq/provenance/hello/Alice> - the URI for the provenance resource could just as well have been say <http://localhost:8080/about/history/1337>. 
 
-    Link: <http://localhost:8080/paq/hello/provenance/greet/Alice>; rel="http://www.w3.org/ns/prov#has_provenance";
-        anchor="http://localhost:8080/paq/hello/greet/Alice"
+Rather than for each publisher to invent specific ways to locate the provenance resource, the W3C [PROV-AQ](http://www.w3.org/TR/prov-aq/) Note suggests a common way to find the provenance resource by using HTTP <code>Link:</code> headers according to [RFC5988](http://tools.ietf.org/html/rfc5988)   
+
+
+Specifically, PAQ says that a [resource accessed by HTTP](http://www.w3.org/TR/2013/WD-prov-aq-20130312/#resource-accessed-by-http) can 
+describe its provenance trace by adding a <code>Link}} header with the relation "http://www.w3.org/ns/prov#has_provenance". So in our case, this can be achieved with:
+
+    Link: <http://localhost:8080/paq/provenance/hello/Alice>; rel="http://www.w3.org/ns/prov#has_provenance"
+
 
 OK, so how do we provide this Link header? Our existing greeting is
 quite simple thanks to [JAX-RS and CXF](http://cxf.apache.org/docs/jax-rs-basics.html):
 
     @GET
-    @Path("/greet/{name}")
+    @Path("hello/{name}")
     @Produces("text/plain")
-    public String greet(@PathParam("name") String name) {
-        return "Hello, " + name + "\n";
+    public String hello(@PathParam("name") String name) {
+        String greeting = "Hello, " + name + "\n";
+        return greeting;
     }
 
-Our provenance method is a bit more complicated as it needs to [generate 
-the absolute URIs](http://cxf.apache.org/docs/jax-rs-basics.html#JAX-RSBasics-URIcalculationusingUriInfoandUriBuilder) for the greeting resource and then build the PROV-N trace - here using naive string contatination.
+
+Our provenance method is a bit more complicated as it [generates 
+the absolute URIs](http://cxf.apache.org/docs/jax-rs-basics.html#JAX-RSBasics-URIcalculationusingUriInfoandUriBuilder) for the greeting resource (depending on the name parameter) and then build the PROV-N trace - here using a simple [MessageFormat](http://docs.oracle.com/javase/7/docs/api/java/text/MessageFormat.html) template.
+
 
     @GET
+    @Path("provenance/hello/{name}")
     @Produces("text/provenance-notation")
-    @Path("/provenance/greet/{name}")
-    public String greetProvenance(@PathParam("name") String name,
-    		@Context UriInfo ui) {
-    	UriBuilder appUri = ui.getBaseUriBuilder().path(getClass());
-		UriBuilder greetUri = appUri.path(getClass(), "greet");
-    	
-    	URI greetURI = greetUri.build(name);
-    	URI appURI = appUri.build("").resolve("../");
-    	
-    	StringBuilder prov = new StringBuilder();
-    	prov.append("document\n");
-        // ...
-    	prov.append(String.format(" wasAttributedTo(%s, app:hello)\n", greetEntity));
-    	prov.append("endDocument\n");
-    	return prov.toString();
+    public String helloProvenance(@PathParam("name") String name,
+            @Context UriInfo ui) throws IOException {
+        // Get our absolute URI
+        // See http://cxf.apache.org/docs/jax-rs-basics.html#JAX-RSBasics-URIcalculationusingUriInfoandUriBuilder       
+        UriBuilder appUri = ui.getBaseUriBuilder();
+        // Absolute URIs for resources we are to give provenance about
+        URI helloURI = appUri.path(getClass(), "hello").build(name);        
+        
+        // Prepare prefixes for PROV-N qualified names
+        URI appURI = appUri.build("").resolve("../");       
+        URI helloPrefix = helloURI.resolve("./");
+        
+        // The PROV-N qualified name for our /hello/{name} resource
+        String helloEntity = "hello:" + helloPrefix.relativize(helloURI);
+        
+        // Simple PROV-N trace, see <http://www.w3.org/TR/prov-n/>
+        // Here this is done in a naive way by loading a template 
+        // from src/main/resources and do string-replace to insert
+        // our URIs.
+        String template = IOUtils.toString(getClass().getResourceAsStream("/provTemplate.txt"));
+        String prov = MessageFormat.format(template, 
+                helloPrefix, appURI, helloEntity, name);
+        // Note: PROV-N should be be built using say the PROV Toolbox 
+        // rather than this naive template approach!
+        return prov;
     }
 
-So in order to provide the RESTful links we will need to insert *Link:*
-headers in the greet() response.
 
-TODO: How to do this?
+So in order to provide the RESTful links we will need to insert *Link:*
+headers in the hello() response.
+
