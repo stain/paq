@@ -212,12 +212,34 @@ and just to verify we did get our absolute URIs right above, we follow the link:
       wasAttributedTo(hello:Alice, app:hello)
     endDocument
     
-Let's try to do some hackish shell script to fetch this URL (this requires Linux/OSX or Cygwin installed):
+Let's try to do some hackish shell script to fetch this URL (this requires that sed and grep are installed):
 
-    PS C:\Users\stain\src\paq> curl $(curl -s -I http://localhost:8080/paq/hello/Alice | grep ^Link:.*has_provenance  | sed 's/.*<//' | sed 's/>.*//') > provenance.provn
     
+    PS C:\Users\stain\src\paq> curl -s -I http://localhost:8080/paq/hello/Alice | grep ^Link:.*has_provenance  | sed 's/.*<//' | sed 's/>.*//'
+    http://localhost:8080/paq/provenance/hello/Alice
+
 Note, the above will not work if the Link header spans multiple lines, which would be legal according to HTTP 1.1 and RFC 5988.)
 
-If we now have a [ProvToolbox](https://github.com/lucmoreau/ProvToolbox) installed, we can generate a diagram:
+If we now have a [ProvToolbox](https://github.com/lucmoreau/ProvToolbox) installed, we can generate a diagram. The below assumes that [toolbox-0.1.3-release.zip](http://openprovenance.org/java/maven-releases/org/openprovenance/prov/toolbox/0.1.3/toolbox-0.1.3-release.zip) was unzipped into <code>
+$HOME/software/provToolbox</code>:
+
+    #!/bin/bash
+    
+    set -e
+    
+    PROVTOOLBOX="$HOME/software\provToolbox"
+    PROVCONVERT="$PROVTOOLBOX/bin/provconvert.bat"
+    
+    provUri=`curl -s -I $1 | grep ^Link:.*has_provenance  | sed 's/.*<//' | sed 's/>.*//' | head -n 1`
+    
+    provn=/tmp/$$.provn
+    
+    curl -o $provn $provUri
+    
+    svg=/tmp/$$.svg
+    
+    cd $PROVTOOLBOX
+    $PROVCONVERT $provn $svg
+
 
 TODO: Make diagram   .. See examples/alice.png
