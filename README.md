@@ -221,7 +221,7 @@ Let's try to do some hackish shell script to fetch this URL (this requires that 
 Note, the above will not work if the Link header spans multiple lines, which would be legal according to HTTP 1.1 and RFC 5988.)
 
 If we now have a [ProvToolbox](https://github.com/lucmoreau/ProvToolbox) installed, we can generate a diagram. The below assumes that [toolbox-0.1.3-release.zip](http://openprovenance.org/java/maven-releases/org/openprovenance/prov/toolbox/0.1.3/toolbox-0.1.3-release.zip) was unzipped into <code>
-$HOME/software/provToolbox</code>:
+$HOME/software/provToolbox</code>: 
 
     #!/bin/bash
     
