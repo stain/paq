@@ -11,6 +11,9 @@
 	<properties>
 		<jackson.version>1.8.6</jackson.version>
 		<cxf.version>2.7.3</cxf.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
 	</properties>
 	<dependencies>
 		<dependency>
@@ -58,6 +61,15 @@
 				<version>6.1.26</version>
 				<configuration>
 					<scanIntervalSeconds>10</scanIntervalSeconds>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+                <version>3.0</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
 				</configuration>
 			</plugin>
 		</plugins>
